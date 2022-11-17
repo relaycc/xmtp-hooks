@@ -1,0 +1,70 @@
+{
+  "name": "@relaycc/xmtp-hooks",
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org/"
+  },
+  "version": "0.0.2",
+  "description": "The best way to add xmtp-js to your React app.",
+  "scripts": {
+    "build": "rollup -c",
+    "watch": "rollup -c -w",
+    "lint": "eslint src/",
+    "prettier": "prettier --check .",
+    "prettier:fix": "prettier . --write",
+    "typecheck": "tsc --emitDeclarationOnly false --noEmit",
+    "sanity": "npm run lint && npm run prettier && npm run typecheck && npm run build",
+    "patch": "npm version patch -m 'patch: Bump version to %s'",
+    "pub": "npm run lint && npm run prettier && npm run typecheck && npm run build && npm run patch && npm publish"
+  },
+  "author": "Relay",
+  "license": "MIT",
+  "devDependencies": {
+    "@rollup/plugin-commonjs": "^21.0.1",
+    "@rollup/plugin-node-resolve": "^15.0.1",
+    "@rollup/plugin-typescript": "^8.3.0",
+    "@rollup/plugin-url": "^7.0.0",
+    "@tanstack/react-query-devtools": "^4.12.0",
+    "@types/react": "^18.0.1",
+    "@typescript-eslint/eslint-plugin": "5.17.0",
+    "@typescript-eslint/parser": "5.17.0",
+    "eslint": "^8.23.0",
+    "eslint-config-airbnb": "19.0.4",
+    "eslint-config-next": "12.1.0",
+    "eslint-config-prettier": "8.5.0",
+    "eslint-plugin-import": "2.25.4",
+    "eslint-plugin-jsx-a11y": "6.5.1",
+    "eslint-plugin-react": "7.29.4",
+    "eslint-plugin-react-hooks": "4.4.0",
+    "prettier": "^2.7.1",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "rollup": "^2.60.0",
+    "rollup-plugin-node-polyfills": "^0.2.1",
+    "tslib": "^2.4.0",
+    "typescript": "^4.7.4"
+  },
+  "peerDependencies": {
+    "react": "^16 || ^17 || ^18",
+    "react-dom": "^16 || ^17 || ^18"
+  },
+  "dependencies": {
+    "@ethersproject/address": "^5.7.0",
+    "@ethersproject/providers": "^5.7.0",
+    "@ethersproject/wallet": "^5.7.0",
+    "@tanstack/react-query": "^4.10.3",
+    "@xmtp/proto": "^3.4.0",
+    "@xmtp/xmtp-js": "^7.0.1",
+    "buffer": "^6.0.3",
+    "comlink": "^4.3.1",
+    "encoding": "^0.1.13",
+    "gql": "^1.1.2",
+    "graphql-request": "^5.0.0",
+    "zustand": "^4.1.1"
+  },
+  "main": "dist/cjs/index.js",
+  "module": "dist/esm/index.js",
+  "files": [
+    "dist"
+  ],
+  "types": "dist/types/index.d.ts"
+}
