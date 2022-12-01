@@ -20,8 +20,7 @@
 /public
 
 # examples
-
-# /examples
+/examples
 
 # misc
 .DS_Store
