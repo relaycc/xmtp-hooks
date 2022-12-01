@@ -16,6 +16,9 @@
 /build
 /dist
 
+# assets and other generated files
+/public
+
 # examples
 
 # /examples
