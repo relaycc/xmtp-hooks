@@ -3,7 +3,7 @@
   "publishConfig": {
     "registry": "https://registry.npmjs.org/"
   },
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "The best way to add xmtp-js to your React app.",
   "scripts": {
     "build": "rollup -c",
@@ -14,16 +14,17 @@
     "typecheck": "tsc --emitDeclarationOnly false --noEmit",
     "sanity": "npm run lint && npm run prettier && npm run typecheck && npm run build",
     "patch": "npm version patch -m 'patch: Bump version to %s'",
-    "pub": "npm run lint && npm run prettier && npm run typecheck && npm run build && npm run patch && npm publish"
+    "pub": "npm run lint && npm run prettier && npm run typecheck && npm run build && npm run patch && npm publish --access public"
   },
   "author": "Relay",
   "license": "MIT",
   "devDependencies": {
+    "@ethersproject/abstract-signer": "^5.7.0",
     "@rollup/plugin-commonjs": "^21.0.1",
     "@rollup/plugin-node-resolve": "^15.0.1",
     "@rollup/plugin-typescript": "^8.3.0",
     "@rollup/plugin-url": "^7.0.0",
-    "@tanstack/react-query-devtools": "^4.12.0",
+    "@tanstack/react-query-devtools": "^4.16.1",
     "@types/react": "^18.0.1",
     "@typescript-eslint/eslint-plugin": "5.17.0",
     "@typescript-eslint/parser": "5.17.0",
