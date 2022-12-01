@@ -3,7 +3,7 @@
   "publishConfig": {
     "registry": "https://registry.npmjs.org/"
   },
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "The best way to add xmtp-js to your React app.",
   "scripts": {
     "build": "rollup -c",
