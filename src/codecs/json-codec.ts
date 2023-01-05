@@ -1,4 +1,4 @@
-import { ContentCodec, ContentTypeId, EncodedContent } from '@xmtp/xmtp-js';
+import { ContentCodec, ContentTypeId, EncodedContent } from '@relaycc/xmtp-js';
 
 export const JSON_ID = new ContentTypeId({
   authorityId: 'relay.cc',

@@ -1,4 +1,4 @@
-import { DecodedMessage } from '@xmtp/xmtp-js';
+import { DecodedMessage } from '@relaycc/xmtp-js';
 import { EthAddress, isEthAddress } from './eth';
 import {
   Conversation,

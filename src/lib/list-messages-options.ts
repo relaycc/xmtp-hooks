@@ -1,5 +1,5 @@
 import { messageApi } from '@xmtp/proto';
-import { ListMessagesOptions as XmtpListMessagesOptions } from '@xmtp/xmtp-js';
+import { ListMessagesOptions as XmtpListMessagesOptions } from '@relaycc/xmtp-js';
 
 export interface ListMessagesOptions {
   limit?: number;

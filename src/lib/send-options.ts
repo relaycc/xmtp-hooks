@@ -1,4 +1,4 @@
-import { SendOptions as XmtpSendOptions } from '@xmtp/xmtp-js';
+import { SendOptions as XmtpSendOptions } from '@relaycc/xmtp-js';
 import { toXmtpContentTypeId, ContentTypeId } from './content-type-id';
 
 export interface SendOptions {

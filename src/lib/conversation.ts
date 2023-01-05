@@ -1,4 +1,4 @@
-import { Conversation as XmtpConversation } from '@xmtp/xmtp-js';
+import { Conversation as XmtpConversation } from '@relaycc/xmtp-js';
 import { EthAddress, isEthAddress } from './eth';
 
 export interface Conversation {

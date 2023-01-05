@@ -1,4 +1,4 @@
-import { Client as XmtpClient, ClientOptions } from '@xmtp/xmtp-js';
+import { Client as XmtpClient, ClientOptions } from '@relaycc/xmtp-js';
 import { EthAddress, isEthAddress } from './eth';
 
 export interface Client {

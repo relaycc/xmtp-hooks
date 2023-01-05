@@ -1,4 +1,4 @@
-import { ContentTypeText } from '@xmtp/xmtp-js';
+import { ContentTypeText } from '@relaycc/xmtp-js';
 import {
   JSON_ID as XMTP_JSON_ID,
   ContentTypeId as XmtpContentTypeId,

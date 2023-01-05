@@ -4,7 +4,7 @@ import {
   DecodedMessage,
   Conversation as XmtpConversation,
   Stream,
-} from '@xmtp/xmtp-js';
+} from '@relaycc/xmtp-js';
 import { Wallet as EthersWallet } from '@ethersproject/wallet';
 import { Signer } from '@ethersproject/abstract-signer';
 import * as Comlink from 'comlink';
