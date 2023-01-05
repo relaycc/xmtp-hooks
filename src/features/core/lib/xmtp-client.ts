@@ -45,6 +45,7 @@ export class XmtpClient {
   }
 
   public async fetchConversations(): Promise<Conversation[] | null> {
+    console.log('xmtp-clien.ts :: fetchConversations :: this.opts', this.opts);
     return this.worker.fetchConversations(this.opts);
   }
 
@@ -63,6 +64,19 @@ export class XmtpClient {
       ...opts,
       ...this.opts,
     });
+  }
+
+  public async startAllMessagesStream() {
+    return this.worker.startAllMessagesStream(this.opts);
+  }
+
+  public async addListenerToAllMessagesStream(
+    handler: (message: Message) => unknown
+  ) {
+    return this.worker.addListenerToAllMessagesStream(
+      proxy(handler),
+      this.opts
+    );
   }
 
   public async startMessageStream(conversation: Conversation) {

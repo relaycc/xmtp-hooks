@@ -5,7 +5,7 @@ import { QueryContext } from '../context';
 import { useMutation } from '@tanstack/react-query';
 
 export type UseWriteValueProps = {
-  clientAddress: EthAddress;
+  clientAddress?: EthAddress | null;
   key: string;
   opts?: {
     onSuccess?: () => unknown;

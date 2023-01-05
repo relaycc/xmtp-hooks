@@ -8,6 +8,7 @@ export * from './useFetchMessages';
 export * from './useFetchPeerOnNetwork';
 export * from './useSendMessage';
 export * from './useMessageStream';
+export * from './useAllMessagesStream';
 export * from './useConversationStream';
 export * from './useReadValue';
 export * from './useWriteValue';

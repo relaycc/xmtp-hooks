@@ -1,23 +1,22 @@
 import { useWorkerClient } from './useWorkerClient';
-import { useQuery, UseQueryResult } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { QueryContext } from '../context';
-import { EthAddress } from '../../../lib';
-
-export type UseXmtpQueryResult<T> = UseQueryResult<T, unknown> & {
-  isWaiting: boolean;
-};
+import { EthAddress, isEthAddress } from '../../../lib';
+import { XmtpClient, XmtpWorkerQueryResult } from '../lib';
 
 export interface UseXmtpClientProps {
-  clientAddress: EthAddress;
+  clientAddress?: EthAddress | null;
 }
 
-export const useXmtpClient = ({ clientAddress }: UseXmtpClientProps) => {
+export const useXmtpClient = ({
+  clientAddress,
+}: UseXmtpClientProps): XmtpWorkerQueryResult<XmtpClient | null> => {
   const workerClient = useWorkerClient();
 
-  return useQuery(
+  const query = useQuery(
     ['xmtp client', clientAddress],
     async () => {
-      if (workerClient === null) {
+      if (!isEthAddress(clientAddress) || workerClient === null) {
         throw new Error(
           'useXmtpClient :: clientAddress is not an EthAddress or workerClient is null'
         );
@@ -27,8 +26,13 @@ export const useXmtpClient = ({ clientAddress }: UseXmtpClientProps) => {
     },
     {
       context: QueryContext,
-      enabled: workerClient !== null,
+      enabled: workerClient !== null && isEthAddress(clientAddress),
       staleTime: Infinity,
     }
   );
+
+  return {
+    isWaiting: !isEthAddress(clientAddress),
+    ...query,
+  };
 };

@@ -36,6 +36,8 @@ class XmtpWorker implements IXmtpWorker {
     { client: Xmtp; env: 'dev' | 'production' } | undefined
   > = {};
 
+  private allMessagesStreamStore: AllMessageStreamStore =
+    new AllMessageStreamStore();
   private messageStreamStore: MessageStreamStore = new MessageStreamStore();
   private conversationStreamStore: ConversationStreamStore =
     new ConversationStreamStore();
@@ -79,6 +81,7 @@ class XmtpWorker implements IXmtpWorker {
         return wallet.address;
       } else {
         log(`startClient :: wallet is a signer`);
+        log(`startClient :: wallet type: ${typeof wallet}`);
         return wallet.getAddress();
       }
     })();
@@ -386,6 +389,61 @@ class XmtpWorker implements IXmtpWorker {
     }
   }
 
+  public async startAllMessagesStream(opts: TargetOpts) {
+    log(`startAllMessagesStream opts ${JSON.stringify(opts)}`);
+    const client = this.getTargetClient(opts);
+    if (client === null) {
+      warn(`startAllMessagesStream :: no client for ${JSON.stringify(opts)}`);
+      return null;
+    } else {
+      const key = this.allMessagesStreamStore.buildKey(client);
+      const preexisting = this.messageStreamStore.read(key);
+
+      if (preexisting !== null) {
+        warn(`startAllMessagesStream :: stream already exists for ${key}`);
+        return true;
+      } else {
+        try {
+          log(`startAllMessagesStream :: creating stream for ${key}`);
+          const messageStream = await AllMessagesStream.create(client);
+          this.allMessagesStreamStore.write(key, messageStream);
+          return true;
+        } catch (error) {
+          err(
+            `startAllMessagesStream :: error starting stream for key ${key}: error: ${error}`
+          );
+          return false;
+        }
+      }
+    }
+  }
+
+  public async addListenerToAllMessagesStream(
+    handler: (message: Message) => unknown,
+    opts: TargetOpts
+  ) {
+    log(`addListenerToAllMessagesStream conversation ${JSON.stringify(opts)}`);
+    const client = this.getTargetClient(opts);
+    if (client === null) {
+      warn(
+        `addListenerToAllMessagesStream :: no client for ${JSON.stringify(
+          opts
+        )}`
+      );
+      return null;
+    } else {
+      const key = this.allMessagesStreamStore.buildKey(client);
+      const preexisting = this.allMessagesStreamStore.read(key);
+      if (preexisting === null) {
+        warn(`addListenerToAllMessagesStream :: no stream for ${key}`);
+        return null;
+      } else {
+        log(`addListenerToAllMessagesStream :: adding listener to ${key}`);
+        return preexisting.addHandler(handler);
+      }
+    }
+  }
+
   public async startConversationStream(opts: TargetOpts) {
     const client = this.getTargetClient(opts);
     if (client === null) {
@@ -450,6 +508,82 @@ function warn(message: string) {
 
 function err(message: string) {
   console.log(`XmtpWorker :: %c${message}`, 'font-style: italic, color: red');
+}
+
+/* ****************************************************************************
+ *
+ *
+ *  All Messages Stream Helper Classes
+ *
+ *
+ * ****************************************************************************/
+
+class AllMessageStreamStore {
+  private streams: Record<string, AllMessagesStream> = {};
+
+  public read(key: string): AllMessagesStream | null {
+    return this.streams[key] || null;
+  }
+
+  public write(key: string, messageStream: AllMessagesStream) {
+    if (this.streams[key] !== undefined) {
+      return null;
+    } else {
+      this.streams[key] = messageStream;
+      return key;
+    }
+  }
+
+  public buildKey(client: Client) {
+    return `${client.address}-all-messages`;
+  }
+}
+
+class AllMessagesStream {
+  private handlers: Record<string, (message: Message) => unknown> = {};
+
+  public constructor(
+    public clientAddress: EthAddress,
+    private stream: AsyncGenerator<DecodedMessage, unknown, unknown>
+  ) {
+    this.start();
+  }
+
+  public static async create(client: Client) {
+    if (!isEthAddress(client.address)) {
+      throw new Error('client.address is not an EthAddress');
+    } else {
+      const stream = await client.conversations.streamAllMessages();
+      return new AllMessagesStream(client.address, stream);
+    }
+  }
+
+  private async start() {
+    for await (const message of this.stream) {
+      for (const handler of Object.values(this.handlers)) {
+        handler(fromXmtpMessage(message));
+      }
+    }
+  }
+
+  public addHandler(handler: (message: Message) => unknown) {
+    const key = this.buildKey();
+    this.handlers[key] = handler;
+    return key;
+  }
+
+  public removeHandler(key: string) {
+    if (this.handlers[key] === undefined) {
+      return null;
+    } else {
+      delete this.handlers[key];
+      return key;
+    }
+  }
+
+  public buildKey() {
+    return `${Math.random()}${Math.random()}${Math.random()}${Math.random()}`;
+  }
 }
 
 /* ****************************************************************************

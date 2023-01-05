@@ -5,7 +5,7 @@ import { QueryContext } from '../context';
 import { useMutation } from '@tanstack/react-query';
 
 export type UseSendMessageProps = {
-  clientAddress: EthAddress;
+  clientAddress?: EthAddress | null;
   opts?: {
     onSuccess?: (message: Message | null) => unknown;
     onError?: (error: unknown) => unknown;

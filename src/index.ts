@@ -8,4 +8,7 @@ export {
   isEthAddress,
   Conversation,
   Message,
+  isMessage,
+  isConversation,
+  isSameConversation,
 } from './lib';

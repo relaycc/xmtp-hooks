@@ -72,3 +72,13 @@ export const addConversation = (
     return [conversation, ...conversations];
   }
 };
+
+export const isSameConversation = (
+  a: Conversation,
+  b: Conversation
+): boolean => {
+  return (
+    a.peerAddress === b.peerAddress &&
+    a.context?.conversationId === b.context?.conversationId
+  );
+};

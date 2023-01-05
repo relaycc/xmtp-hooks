@@ -8,6 +8,7 @@
   "scripts": {
     "build": "rollup -c",
     "watch": "rollup -c -w",
+    "dev": "npm link ../xmtp-js && npm run watch",
     "lint": "eslint src/",
     "prettier": "prettier --check .",
     "prettier:fix": "prettier . --write",

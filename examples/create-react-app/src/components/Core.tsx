@@ -319,7 +319,11 @@ const ListConversations = ({
   );
 };
 
-const ListMessages = ({ conversation }: { conversation: Conversation }) => {
+export const ListMessages = ({
+  conversation,
+}: {
+  conversation: Conversation;
+}) => {
   const messages = useFetchMessages({
     conversation,
     clientAddress: address,

@@ -1,24 +1,38 @@
 import { useQuery } from '@tanstack/react-query';
 import { QueryContext } from '../context';
-import { useXmtpClient, UseXmtpQueryResult } from './useXmtpClient';
+import { useXmtpClient } from './useXmtpClient';
+import { XmtpWorkerQueryResult } from '../lib';
 import { Conversation, EthAddress } from '../../../lib';
 
 export type UseFetchConversationsProps = {
-  clientAddress: EthAddress;
+  clientAddress?: EthAddress | null;
 };
 
 export const useFetchConversations = ({
   clientAddress,
-}: UseFetchConversationsProps): UseXmtpQueryResult<Conversation[] | null> => {
+}: UseFetchConversationsProps): XmtpWorkerQueryResult<
+  Conversation[] | null
+> => {
   const client = useXmtpClient({ clientAddress });
 
   const query = useQuery(
-    ['conversations'],
-    () => {
+    ['conversations', clientAddress],
+    async () => {
       if (client.data === null || client.data === undefined) {
         throw new Error('useFetchConversations :: client is null or undefined');
       } else {
-        return client.data.fetchConversations();
+        const uniq: Record<string, Conversation> = {};
+        const conversations = await client.data.fetchConversations();
+        if (conversations === null) {
+          return null;
+        } else {
+          conversations.forEach((conversation) => {
+            uniq[
+              conversation.peerAddress + conversation.context?.conversationId
+            ] = conversation;
+          });
+          return Object.values(uniq);
+        }
       }
     },
     {

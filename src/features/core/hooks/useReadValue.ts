@@ -2,15 +2,19 @@ import { QueryContext } from '..';
 import { useQuery } from '@tanstack/react-query';
 import { useXmtpClient } from '..';
 import { EthAddress } from '../../../lib';
+import { XmtpWorkerQueryResult } from '../lib';
 
 export interface UseReadValueProps {
-  clientAddress: EthAddress;
+  clientAddress?: EthAddress | null;
   key: string;
 }
 
-export const useReadValue = ({ clientAddress, key }: UseReadValueProps) => {
+export const useReadValue = ({
+  clientAddress,
+  key,
+}: UseReadValueProps): XmtpWorkerQueryResult<unknown> => {
   const client = useXmtpClient({ clientAddress });
-  return useQuery(
+  const query = useQuery(
     ['key value', clientAddress, key],
     async () => {
       if (client.data === null || client.data === undefined) {
@@ -18,7 +22,6 @@ export const useReadValue = ({ clientAddress, key }: UseReadValueProps) => {
           'useKeyValue :: client is null or undefined or clientAddress is not an EthAddress'
         );
       } else {
-        console.log('here');
         return (await client.data.readValue(key)) || null;
       }
     },
@@ -28,4 +31,9 @@ export const useReadValue = ({ clientAddress, key }: UseReadValueProps) => {
       staleTime: Infinity,
     }
   );
+
+  return {
+    ...query,
+    isWaiting: client.data === null || client.data === undefined,
+  };
 };

@@ -1,6 +1,10 @@
 import { DecodedMessage } from '@xmtp/xmtp-js';
 import { EthAddress, isEthAddress } from './eth';
-import { Conversation, fromXmtpConversation } from './conversation';
+import {
+  Conversation,
+  fromXmtpConversation,
+  isConversation,
+} from './conversation';
 
 export interface Message {
   id: string;
@@ -9,6 +13,26 @@ export interface Message {
   sent: Date;
   content: unknown;
 }
+
+export const isMessage = (value: unknown): value is Message => {
+  if (typeof value !== 'object' || value === null) {
+    return false;
+  }
+  const message = value as Message;
+  if (typeof message.id !== 'string') {
+    return false;
+  }
+  if (!isConversation(message.conversation)) {
+    return false;
+  }
+  if (!isEthAddress(message.senderAddress)) {
+    return false;
+  }
+  if (!(message.sent instanceof Date)) {
+    return false;
+  }
+  return true;
+};
 
 export const fromXmtpMessage = (message: DecodedMessage): Message => {
   return {

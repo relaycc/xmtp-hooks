@@ -1,27 +1,27 @@
 import { useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { QueryContext } from '../context';
-import { Conversation, EthAddress } from '../../../lib';
+import { EthAddress, Message } from '../../../lib';
 import { useXmtpClient } from './useXmtpClient';
 
-export interface UseConversationStreamProps {
+export interface UseAllMessagesStreamProps {
   clientAddress?: EthAddress | null;
-  listener: (conversation: Conversation) => unknown;
+  listener: (message: Message) => unknown;
 }
 
-export const useConversationStream = ({
+export const useAllMessagesStream = ({
   clientAddress,
   listener,
-}: UseConversationStreamProps) => {
+}: UseAllMessagesStreamProps) => {
   const client = useXmtpClient({ clientAddress });
 
   const query = useQuery(
-    ['conversation stream', clientAddress],
+    ['message stream', clientAddress],
     () => {
       if (client.data === null || client.data === undefined) {
-        throw new Error('useConversationStream :: client is null or undefined');
+        throw new Error('useAllMessageStream :: client is null or undefined');
       } else {
-        return client.data.startConversationStream();
+        return client.data.startAllMessagesStream();
       }
     },
     {
@@ -33,9 +33,9 @@ export const useConversationStream = ({
   useEffect(() => {
     if (query.data === true) {
       if (client.data === null || client.data === undefined) {
-        throw new Error('useConversationStream :: client is null or undefined');
+        throw new Error('useAllMessagesStream :: client is null or undefined');
       } else {
-        client.data.addListenerToConversationStream(listener);
+        client.data.addListenerToAllMessagesStream(listener);
       }
     }
   }, [query.data]);

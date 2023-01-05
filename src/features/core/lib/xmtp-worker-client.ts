@@ -34,8 +34,15 @@ export class XmtpWorkerClient {
     const xmtp = await worker.startClient(
       (() => {
         if (isIdentityWallet(wallet)) {
+          console.log(
+            'XmtpWorkerClient :: startClient :: wallet is an identity wallet'
+          );
           return wallet;
         } else {
+          console.log(
+            'XmtpWorkerClient :: startClient :: wallet is a Signer wallet'
+          );
+          console.log('wallet', wallet);
           return proxy(wallet);
         }
       })(),

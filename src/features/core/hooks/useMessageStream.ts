@@ -5,8 +5,8 @@ import { Conversation, EthAddress, Message } from '../../../lib';
 import { useXmtpClient } from './useXmtpClient';
 
 export interface UseMessageStreamProps {
-  clientAddress: EthAddress;
-  conversation: Conversation;
+  clientAddress?: EthAddress | null;
+  conversation: Conversation | null;
   listener: (message: Message) => unknown;
 }
 
@@ -21,11 +21,15 @@ export const useMessageStream = ({
     [
       'message stream',
       clientAddress,
-      conversation.peerAddress,
-      conversation.context?.conversationId,
+      conversation?.peerAddress,
+      conversation?.context?.conversationId,
     ],
     () => {
-      if (client.data === null || client.data === undefined) {
+      if (
+        client.data === null ||
+        client.data === undefined ||
+        conversation === null
+      ) {
         throw new Error('useMessageStream :: client is null or undefined');
       } else {
         return client.data.startMessageStream(conversation);
@@ -33,14 +37,23 @@ export const useMessageStream = ({
     },
     {
       context: QueryContext,
-      enabled: client.data !== null && client.data !== undefined,
+      enabled:
+        client.data !== null &&
+        client.data !== undefined &&
+        conversation !== null,
     }
   );
 
   useEffect(() => {
     if (query.data === true) {
-      if (client.data === null || client.data === undefined) {
-        throw new Error('useMessageStream :: client is null or undefined');
+      if (
+        client.data === null ||
+        client.data === undefined ||
+        conversation === null
+      ) {
+        throw new Error(
+          'useMessageStream :: client is null or undefined or conversation is null'
+        );
       } else {
         client.data.addListenerToMessageStream(conversation, listener);
       }

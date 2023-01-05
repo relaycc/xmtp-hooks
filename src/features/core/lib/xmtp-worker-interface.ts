@@ -52,6 +52,11 @@ export interface IXmtpWorker {
     handler: (message: Message) => unknown,
     opts: TargetOpts
   ): Promise<string | null>;
+  startAllMessagesStream(opts: TargetOpts): Promise<boolean | null>;
+  addListenerToAllMessagesStream(
+    handler: (message: Message) => unknown,
+    opts: TargetOpts
+  ): Promise<string | null>;
   startConversationStream(opts: TargetOpts): Promise<boolean | null>;
   addListenerToConversationStream(
     handler: (conversation: Conversation) => unknown,

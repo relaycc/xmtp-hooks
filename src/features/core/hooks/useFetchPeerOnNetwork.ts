@@ -1,15 +1,16 @@
 import { useQuery } from '@tanstack/react-query';
 import { EthAddress, isEthAddress } from '../../../lib';
 import { QueryContext } from '../context';
-import { useXmtpClient, UseXmtpQueryResult } from './useXmtpClient';
+import { useXmtpClient } from './useXmtpClient';
+import { XmtpWorkerQueryResult } from '../lib';
 
 export const useFetchPeerOnNetwork = ({
   clientAddress,
   peerAddress,
 }: {
-  clientAddress: EthAddress;
+  clientAddress?: EthAddress | null;
   peerAddress: EthAddress | null;
-}): UseXmtpQueryResult<boolean | null> => {
+}): XmtpWorkerQueryResult<boolean | null> => {
   const client = useXmtpClient({ clientAddress });
   const query = useQuery(
     ['peer on network', clientAddress, peerAddress],
