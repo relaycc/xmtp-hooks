@@ -21,13 +21,30 @@ export const useXmtpClient = ({
           'useXmtpClient :: clientAddress is not an EthAddress or workerClient is null'
         );
       } else {
-        return await workerClient.fetchClient({ clientAddress });
+        console.log(
+          'useXmtpClient :: Fetching query for address',
+          clientAddress
+        );
+        const fetchedClient = await workerClient.fetchClient({ clientAddress });
+        if (fetchedClient === null || fetchedClient === undefined) {
+          console.log(
+            'useXmtpClient :: No client found for address',
+            clientAddress
+          );
+          return null;
+        } else {
+          console.log(
+            'useXmtpClient :: Got a client for address',
+            clientAddress
+          );
+          return fetchedClient;
+        }
       }
     },
     {
       context: QueryContext,
       enabled: workerClient !== null && isEthAddress(clientAddress),
-      staleTime: Infinity,
+      staleTime: 0,
     }
   );
 

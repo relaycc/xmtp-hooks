@@ -114,7 +114,7 @@ class XmtpWorker implements IXmtpWorker {
           }
         })();
 
-        log(`startClient :: SUCCESS, saving client to state for ${address}`);
+        log(`startClient :: SUCCESS saving client to state for ${address}`);
         this.clients[address] = { client, env: opts?.env ?? 'dev' };
 
         return fromXmtpClient(client, opts);
@@ -123,7 +123,7 @@ class XmtpWorker implements IXmtpWorker {
       err(
         `startClient :: error starting client for address ${address}: ${error}`
       );
-      return null;
+      throw error;
     }
   }
 
@@ -150,13 +150,13 @@ class XmtpWorker implements IXmtpWorker {
   }
 
   public fetchClient = async (opts: TargetOpts) => {
-    log(`fetchClient opts ${JSON.stringify(opts)}`);
+    log(`fetchClient for $opts ${JSON.stringify(opts)}`);
     const client = this.getTargetClient(opts);
     if (client === null) {
       warn(`fetchClient :: no client for ${JSON.stringify(opts)}`);
       return null;
     } else {
-      log(`fetchClient :: get client address ${client.address}`);
+      log(`fetchClient :: got client address ${client.address}`);
       return fromXmtpClient(client);
     }
   };
@@ -487,9 +487,13 @@ class XmtpWorker implements IXmtpWorker {
 
   private getTargetClient(opts: TargetOpts): Xmtp | null {
     const cached = this.clients[opts.clientAddress];
-    if (cached === undefined) {
+    if (cached === undefined || cached === null) {
+      log(`getTargetClient :: no cached client for ${JSON.stringify(opts)}`);
       return null;
     } else {
+      log(
+        `getTargetClient :: found a cached client for ${JSON.stringify(opts)}`
+      );
       return cached.client;
     }
   }

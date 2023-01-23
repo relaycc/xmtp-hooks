@@ -41,7 +41,7 @@ export const useFetchMessages = (
       ) {
         throw new Error('useFetchMessages :: client is null or undefined');
       } else {
-        console.log('the query key is', [
+        console.log('useFetchMessages :: the query key is', [
           'messages',
           client.data?.address(),
           conversation?.peerAddress,
