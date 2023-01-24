@@ -102,7 +102,7 @@ class XmtpWorker implements IXmtpWorker {
             console.log(wallet.uuid);
             log(`startClient :: creating from stored identity`);
             return Xmtp.create(null, {
-              env: 'production',
+              env: opts?.env ?? 'production',
               privateKeyOverride: new Uint8Array(wallet.uuid),
             });
           } else {
