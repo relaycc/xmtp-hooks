@@ -2,6 +2,7 @@ import { wrap, Remote, proxy } from 'comlink';
 import { IXmtpWorker, TargetOpts } from './xmtp-worker-interface';
 import { Wallet, ClientOptions, isIdentityWallet } from '../../../lib';
 import { XmtpClient } from './xmtp-client';
+import { ContentCodec } from '@relaycc/xmtp-js';
 
 type XmtpWorkerClass = IXmtpWorker & {
   new (): IXmtpWorker;
@@ -32,6 +33,11 @@ export class XmtpWorkerClient {
   public async createIdentity() {
     const worker = await this.worker;
     return worker.createIdentity();
+  }
+
+  public async addCodec(...codecs: ContentCodec<unknown>[]): Promise<void> {
+    const worker = await this.worker;
+    await worker.addCodec(...codecs);
   }
 
   public async startClient(

@@ -9,6 +9,7 @@ import {
   ClientOptions,
   EthAddress,
 } from '../../../lib';
+import { ContentCodec } from '@relaycc/xmtp-js';
 
 /* We define the XmtpWorker's interface in a separate file so that we can avoid
  * exporting anything from the XmtpWorker file. Adding exports to the WebWorker
@@ -20,6 +21,7 @@ export interface TargetOpts {
 }
 
 export interface IXmtpWorker {
+  addCodec(...codecs: ContentCodec<unknown>[]): void;
   createIdentity(): Promise<IdentityWallet | null>;
   startClient(
     wallet: Wallet,

@@ -4,6 +4,7 @@ import {
   DecodedMessage,
   Conversation as XmtpConversation,
   Stream,
+  ContentCodec,
 } from '@relaycc/xmtp-js';
 import { Wallet as EthersWallet } from '@ethersproject/wallet';
 import { Signer } from '@ethersproject/abstract-signer';
@@ -28,7 +29,7 @@ import {
 import { IXmtpWorker, TargetOpts } from './xmtp-worker-interface';
 import { messageApi } from '@xmtp/proto';
 
-const CODECS = [new JSONCodec()];
+const CODECS: ContentCodec<unknown>[] = [new JSONCodec()];
 
 class XmtpWorker implements IXmtpWorker {
   public clients: Record<
@@ -41,17 +42,59 @@ class XmtpWorker implements IXmtpWorker {
   private messageStreamStore: MessageStreamStore = new MessageStreamStore();
   private conversationStreamStore: ConversationStreamStore =
     new ConversationStreamStore();
+  private codecs: ContentCodec<unknown>[] = [...CODECS];
+
+  public addCodec(...codecs: ContentCodec<unknown>[]) {
+    for (const codec of codecs) {
+      const f = this.codecs.find((c) =>
+        c.contentType.sameAs(codec.contentType)
+      );
+      if (f) {
+        if (
+          f.contentType.versionMajor >= codec.contentType.versionMajor &&
+          f.contentType.versionMinor >= codec.contentType.versionMinor
+        ) {
+          //f is already in the list and the same as or better than the newly given codec
+          //we do nothing
+        } else {
+          //f is already in the list but the newly given codec is better
+          //so, we remove f
+          const index = this.codecs.indexOf(f);
+          if (index > -1) {
+            this.codecs.splice(index, 1);
+          }
+          //warn
+          if (Object.entries(this.clients).length > 0) {
+            warn(
+              `We already have started clients, they will not use the newly added codec ${codec.contentType.toString()}`
+            );
+          }
+          //and add the new codec
+          this.codecs.push(codec);
+        }
+      } else {
+        //warn
+        if (Object.entries(this.clients).length > 0) {
+          warn(
+            `We already have started clients, they will not use the newly added codec ${codec.contentType.toString()}`
+          );
+        }
+        //no codec found with the same content-type, so we add the new one
+        this.codecs.push(codec);
+      }
+    }
+  }
 
   public async createIdentity(): Promise<IdentityWallet | null> {
     log('createIdentity');
     const wallet = EthersWallet.createRandom();
     await Xmtp.create(wallet, {
       env: 'dev',
-      codecs: CODECS,
+      codecs: this.codecs,
     });
     await Xmtp.create(wallet, {
       env: 'production',
-      codecs: CODECS,
+      codecs: this.codecs,
     });
     const keys = await Client.getKeys(wallet);
     log(
@@ -109,7 +152,7 @@ class XmtpWorker implements IXmtpWorker {
             log(`startClient :: creating from signer`);
             return Xmtp.create(wallet as unknown as Signer, {
               ...opts,
-              codecs: CODECS,
+              codecs: this.codecs,
             });
           }
         })();

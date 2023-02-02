@@ -1,4 +1,4 @@
-import { DecodedMessage } from '@relaycc/xmtp-js';
+import { ContentTypeId, DecodedMessage } from '@relaycc/xmtp-js';
 import { EthAddress, isEthAddress } from './eth';
 import {
   Conversation,
@@ -12,6 +12,7 @@ export interface Message {
   senderAddress: EthAddress;
   sent: Date;
   content: unknown;
+  contentType: ContentTypeId;
 }
 
 export const isMessage = (value: unknown): value is Message => {
@@ -47,6 +48,7 @@ export const fromXmtpMessage = (message: DecodedMessage): Message => {
     })(),
     sent: message.sent,
     content: message.content,
+    contentType: message.contentType,
   };
 };
 
