@@ -8,7 +8,7 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "lint": "eslint src/",
+    "lint": "eslint *.ts",
     "prettier": "prettier --check .",
     "prettier:fix": "prettier . --write",
     "typecheck": "tsc --emitDeclarationOnly false --noEmit",
