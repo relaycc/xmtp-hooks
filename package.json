@@ -1,6 +1,8 @@
 {
   "name": "@relaycc/xmtp-hooks",
   "version": "0.0.15",
+  "author": "Achilles Schmelzer <achilles@relay.cc>",
+  "homepage": "https://github.com/relaycc/xmtp-hooks",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -12,7 +14,7 @@
     "typecheck": "tsc --emitDeclarationOnly false --noEmit",
     "sanity": "npm run lint && npm run prettier && npm run typecheck && npm run build",
     "patch": "npm version patch -m 'patch: Bump version to %s'",
-    "pub": "npm run lint && npm run prettier && npm run typecheck && npm run build && npm run patch && npm publish --access public"
+    "pub": "npm run sanity && npm run patch && npm publish --access public"
   },
   "dependencies": {
     "@ethersproject/abstract-signer": "^5.7.0",
