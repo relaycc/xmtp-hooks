@@ -1,6 +1,6 @@
 {
   "name": "@relaycc/xmtp-hooks",
-  "version": "0.0.15",
+  "version": "0.0.16",
   "author": "Achilles Schmelzer <achilles@relay.cc>",
   "homepage": "https://github.com/relaycc/xmtp-hooks",
   "type": "module",
