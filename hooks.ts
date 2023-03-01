@@ -17,6 +17,8 @@ import {
 import XmtpWorker from "./worker?worker&inline";
 import { SortDirection } from "@relaycc/xmtp-js";
 
+type Identity<T> = (x: T) => T;
+
 /* **************************************************************************
  *
  *
@@ -54,33 +56,41 @@ const isValidTransition = (transition: Transition) => {
   );
 };
 
-const useXmtpStore = create<{
-  xmtp: AsyncState<{
-    address: string;
-    env?: string;
-    export?: string;
-    worker: Comlink.Remote<Xmtp>;
-  }>;
-  setXmtp: (
-    xmtp: AsyncState<{
-      address: string;
-      env?: string;
-      export?: string;
-      worker: Comlink.Remote<Xmtp>;
-    }>
-  ) => void;
-}>((set) => ({
-  xmtp: { id: "idle" },
-  setXmtp: async (val) =>
-    set(({ xmtp }) => {
-      const transition: Transition = [xmtp.id, val.id];
+type XmtpFromStore = {
+  address: string;
+  env?: string;
+  export?: string;
+  worker: Comlink.Remote<Xmtp>;
+};
+
+const MISSES_STORE_KEY = "RANDOM STRING HERE";
+
+const xmtpStore = create<Record<string, AsyncState<XmtpFromStore>>>(() => ({}));
+
+export const useXmtpStore = ({
+  clientAddress,
+}: {
+  clientAddress?: string | null;
+}) => {
+  const key = clientAddress || MISSES_STORE_KEY;
+  const xmtp = xmtpStore((state) => state[key]) || { id: "idle" };
+  const setXmtp = (nextXmtp: AsyncState<XmtpFromStore>) => {
+    xmtpStore.setState((state) => {
+      const prevXmtp = state[key] || { id: "idle" };
+      const transition: Transition = [prevXmtp.id, nextXmtp.id];
       if (!isValidTransition(transition)) {
-        return { xmtp };
+        return state;
       } else {
-        return { xmtp: val };
+        return {
+          ...state,
+          [key]: nextXmtp,
+        };
       }
-    }),
-}));
+    });
+  };
+
+  return [xmtp, setXmtp] as const;
+};
 
 /* **************************************************************************
  *
@@ -98,9 +108,11 @@ const useXmtpStore = create<{
  * *************************************************************************/
 
 export const useXmtp = ({
+  clientAddress,
   wallet,
   opts,
 }: {
+  clientAddress?: string | null;
   wallet?: Signer | null;
   opts?: Partial<ClientOptions>;
 }) => {
@@ -110,7 +122,7 @@ export const useXmtp = ({
    *
    * *************************************************************************/
 
-  const { xmtp, setXmtp } = useXmtpStore();
+  const [xmtp, setXmtp] = useXmtpStore({ clientAddress });
 
   const isClientIdle = xmtp.id === "idle";
   const isClientPending = xmtp.id === "pending";
@@ -151,7 +163,7 @@ export const useXmtp = ({
         }
       };
     }
-  }, [xmtp.id, wallet, opts]);
+  }, [xmtp.id, clientAddress, wallet, opts]);
 
   const stopClient: Xmtp["stopClient"] | null = useMemo(() => {
     if (!isClientSuccess) {
@@ -162,7 +174,7 @@ export const useXmtp = ({
         return true;
       };
     }
-  }, [xmtp.id]);
+  }, [xmtp.id, clientAddress, wallet, opts]);
 
   /* **************************************************************************
    *
@@ -345,14 +357,14 @@ const useMessagesStore = create<Record<string, AsyncState<Message[]>>>(
   () => ({})
 );
 
-type Identity<T> = (x: T) => T;
-
 export const useMessages = ({
+  clientAddress,
   conversation,
 }: {
+  clientAddress?: string | null;
   conversation: Conversation;
 }) => {
-  const key = uniqueConversationKey(conversation);
+  const key = `${clientAddress}-${uniqueConversationKey(conversation)}`;
   const messages = useMessagesStore((state) => state[key]) || { id: "idle" };
 
   const setMessages = (
@@ -361,7 +373,10 @@ export const useMessages = ({
     useMessagesStore.setState((state) => {
       return {
         ...state,
-        [key]: typeof input === "function" ? input(state[key]) : input,
+        [key]:
+          typeof input === "function"
+            ? input(state[key] || { id: "idle" })
+            : input,
       };
     });
   };
@@ -389,11 +404,13 @@ const useStreamingStore = create<Record<string, AsyncState<boolean>>>(
 );
 
 export const useStreaming = ({
+  clientAddress,
   conversation,
 }: {
+  clientAddress?: string | null;
   conversation: Conversation;
 }) => {
-  const key = uniqueConversationKey(conversation);
+  const key = `${clientAddress}-${uniqueConversationKey(conversation)}`;
   const streaming = useStreamingStore((state) => state[key]) || { id: "idle" };
 
   const setStreaming = (
@@ -402,12 +419,58 @@ export const useStreaming = ({
     useStreamingStore.setState((state) => {
       return {
         ...state,
-        [key]: typeof input === "function" ? input(state[key]) : input,
+        [key]:
+          typeof input === "function"
+            ? input(state[key] || { id: "idle" })
+            : input,
       };
     });
   };
 
   return [streaming, setStreaming] as const;
+};
+
+/* **************************************************************************
+ *
+ *
+ *
+ *
+ *
+ *
+ * useSentMessagesStore
+ *
+ *
+ *
+ *
+ *
+ * *************************************************************************/
+
+const sentMessagesStore = create<Record<string, AsyncStateArray<Message>>>(
+  () => ({})
+);
+
+export const useSentMessagesStore = ({
+  clientAddress,
+  conversation,
+}: {
+  clientAddress?: string | null;
+  conversation: Conversation;
+}) => {
+  const key = `${clientAddress}-${uniqueConversationKey(conversation)}`;
+  const sentMessages = sentMessagesStore((state) => state[key]) || [];
+
+  const setSentMessages = (
+    input: AsyncStateArray<Message> | Identity<AsyncStateArray<Message>>
+  ) => {
+    sentMessagesStore.setState((state) => {
+      return {
+        ...state,
+        [key]: typeof input === "function" ? input(state[key] || []) : input,
+      };
+    });
+  };
+
+  return [sentMessages, setSentMessages] as const;
 };
 
 /* **************************************************************************
@@ -426,10 +489,12 @@ export const useStreaming = ({
  * *************************************************************************/
 
 export const useConversation = ({
+  clientAddress,
   wallet,
   opts,
   conversation,
 }: {
+  clientAddress?: string | null;
   wallet?: Signer | null;
   opts?: Partial<ClientOptions>;
   conversation: Conversation;
@@ -448,7 +513,7 @@ export const useConversation = ({
     stopStreamingMessages,
     listenToStreamingMessages,
     sendMessage,
-  } = useXmtp({ wallet, opts });
+  } = useXmtp({ clientAddress, wallet, opts });
 
   /* **************************************************************************
    *
@@ -456,7 +521,7 @@ export const useConversation = ({
    *
    * *************************************************************************/
 
-  const [messages, setMessages] = useMessages({ conversation });
+  const [messages, setMessages] = useMessages({ clientAddress, conversation });
 
   const isMessagesIdle = messages.id === "idle";
   const isMessagesPending = messages.id === "pending";
@@ -538,7 +603,10 @@ export const useConversation = ({
    *
    * *************************************************************************/
 
-  const [streaming, setStreaming] = useStreaming({ conversation });
+  const [streaming, setStreaming] = useStreaming({
+    clientAddress,
+    conversation,
+  });
 
   const isStreamingIdle = streaming.id === "idle";
   const isStreamingPending = streaming.id === "pending";
@@ -601,11 +669,7 @@ export const useConversation = ({
   const isPeerOnNetworkSuccess = peerOnNetwork.id === "success";
 
   useEffect(() => {
-    if (
-      !isPeerOnNetworkIdle ||
-      fetchPeerOnNetwork === null ||
-      conversation === null
-    ) {
+    if (fetchPeerOnNetwork === null) {
       return;
     } else {
       (async () => {
@@ -618,7 +682,8 @@ export const useConversation = ({
         }
       })();
     }
-  }, [fetchPeerOnNetwork]);
+    // Conversation.peerAddress in the deps is a hack to refetch for different conversations.
+  }, [fetchPeerOnNetwork, conversation.peerAddress]);
 
   /* **************************************************************************
    *
@@ -626,9 +691,10 @@ export const useConversation = ({
    *
    * *************************************************************************/
 
-  const [sentMessages, setSentMessages] = useState<AsyncStateArray<Message>>(
-    []
-  );
+  const [sentMessages, setSentMessages] = useSentMessagesStore({
+    clientAddress,
+    conversation,
+  });
 
   const isSending = useMemo(() => {
     return sentMessages.some((sentMessage) => sentMessage.id === "pending");
@@ -734,6 +800,94 @@ export const useConversation = ({
  *
  *
  *
+ * usePreviewsStore
+ *
+ *
+ *
+ *
+ *
+ * *************************************************************************/
+
+const previewsStore = create<Record<string, AsyncState<Preview[]>>>(() => ({}));
+
+export const usePreviewsStore = ({
+  clientAddress,
+}: {
+  clientAddress?: string | null;
+}) => {
+  const key = clientAddress || MISSES_STORE_KEY;
+  const previews = previewsStore((state) => state[key]) || { id: "idle" };
+
+  const setPreviews = (
+    input: AsyncState<Preview[]> | Identity<AsyncState<Preview[]>>
+  ) => {
+    previewsStore.setState((state) => {
+      return {
+        ...state,
+        [key]:
+          typeof input === "function"
+            ? input(state[key] || { id: "idle" })
+            : input,
+      };
+    });
+  };
+
+  return [previews, setPreviews] as const;
+};
+
+/* **************************************************************************
+ *
+ *
+ *
+ *
+ *
+ *
+ * useGlobalStreamingStore
+ *
+ *
+ *
+ *
+ *
+ * *************************************************************************/
+
+const globalStreamingStore = create<Record<string, AsyncState<boolean>>>(
+  () => ({})
+);
+
+export const useGlobalStreamingStore = ({
+  clientAddress,
+}: {
+  clientAddress?: string | null;
+}) => {
+  const key = clientAddress || MISSES_STORE_KEY;
+  const streaming = globalStreamingStore((state) => state[key]) || {
+    id: "idle",
+  };
+
+  const setStreaming = (
+    input: AsyncState<boolean> | Identity<AsyncState<boolean>>
+  ) => {
+    globalStreamingStore.setState((state) => {
+      return {
+        ...state,
+        [key]:
+          typeof input === "function"
+            ? input(state[key] || { id: "idle" })
+            : input,
+      };
+    });
+  };
+
+  return [streaming, setStreaming] as const;
+};
+
+/* **************************************************************************
+ *
+ *
+ *
+ *
+ *
+ *
  * usePreviews
  *
  *
@@ -743,9 +897,11 @@ export const useConversation = ({
  * *************************************************************************/
 
 export const usePreviews = ({
+  clientAddress,
   wallet,
   opts,
 }: {
+  clientAddress?: string | null;
   wallet?: Signer | null;
   opts?: Partial<ClientOptions>;
 }) => {
@@ -762,7 +918,7 @@ export const usePreviews = ({
     startStreamingAllMessages,
     stopStreamingAllMessages,
     listenToStreamingAllMessages,
-  } = useXmtp({ wallet, opts });
+  } = useXmtp({ clientAddress, wallet, opts });
 
   /* **************************************************************************
    *
@@ -797,8 +953,8 @@ export const usePreviews = ({
    *
    * *************************************************************************/
 
-  const [previews, setPreviews] = useState<AsyncState<Preview[]>>({
-    id: "idle",
+  const [previews, setPreviews] = usePreviewsStore({
+    clientAddress,
   });
 
   const isPreviewsIdle = previews.id === "idle";
@@ -873,9 +1029,7 @@ export const usePreviews = ({
    *
    * *************************************************************************/
 
-  const [streaming, setStreaming] = useState<AsyncState<boolean>>({
-    id: "idle",
-  });
+  const [streaming, setStreaming] = useGlobalStreamingStore({ clientAddress });
 
   const isStreamingIdle = streaming.id === "idle";
   const isStreamingPending = streaming.id === "pending";
